@@ -150,6 +150,15 @@ class QSPIHandle
         */
     Result EraseSector(uint32_t address);
 
+    /**
+     * @brief Erases a single 32k or 64k block on the chip
+     *
+     * @param address Address of the sector to erase
+     * @param is_32k  If true, will erase 32k instead of 64k (default = false)
+     * @return Result::OK or Result::ERR
+     */
+    Result EraseBlock(uint32_t address, bool is_32k = false);
+
     /** Returns the current class status. Useful for debugging.
      *  \returns Status
      */

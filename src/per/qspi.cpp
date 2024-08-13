@@ -64,6 +64,7 @@ class QSPIHandle::Impl
     QSPIHandle::Result Erase(uint32_t start_addr, uint32_t end_addr);
 
     QSPIHandle::Result EraseSector(uint32_t address);
+    QSPIHandle::Result EraseBlock(uint32_t address, bool is_32k);
 
     uint32_t GetPin(size_t pin);
 
@@ -133,9 +134,9 @@ class QSPIHandle::Impl
                                             &config_.pin_config.clk,
                                             &config_.pin_config.ncs};
     Pin* pin_config_arr_sd[4]            = {&config_.pin_config.io0,
-                                 &config_.pin_config.io1,
-                                 &config_.pin_config.clk,
-                                 &config_.pin_config.ncs};
+                                            &config_.pin_config.io1,
+                                            &config_.pin_config.clk,
+                                            &config_.pin_config.ncs};
 };
 
 
@@ -467,6 +468,46 @@ QSPIHandle::Result QSPIHandle::Impl::EraseSector(uint32_t address)
         s_command.AddressMode     = QSPI_ADDRESS_1_LINE;
     }
     s_command.AddressSize       = QSPI_ADDRESS_24_BITS;
+    s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    s_command.DataMode          = QSPI_DATA_NONE;
+    s_command.DummyCycles       = 0;
+    s_command.NbData            = 1;
+    s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    s_command.Address           = address;
+
+    RETURN_IF_ERR(CheckProgramMemory());
+    // Erasing takes a long time anyway, so not much point trying to
+    // minimize reinitializations
+    RETURN_IF_ERR(SetMode(Config::Mode::INDIRECT_POLLING));
+
+    if(WriteEnable() != QSPIHandle::Result::OK)
+    {
+        ERR_RECOVERY(Status::E_HAL_ERROR);
+    }
+    if(HAL_QSPI_Command(&halqspi_, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE)
+       != HAL_OK)
+    {
+        ERR_RECOVERY(Status::E_HAL_ERROR);
+    }
+    if(AutopollingMemReady(HAL_QPSI_TIMEOUT_DEFAULT_VALUE)
+       != QSPIHandle::Result::OK)
+    {
+        ERR_RECOVERY(Status::E_HAL_ERROR);
+    }
+
+    RETURN_IF_ERR(SetMode(Config::Mode::MEMORY_MAPPED));
+    return QSPIHandle::Result::OK;
+}
+
+QSPIHandle::Result QSPIHandle::Impl::EraseBlock(uint32_t address, bool is_32k)
+{
+    QSPI_CommandTypeDef s_command;
+    s_command.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+    s_command.Instruction     = is_32k ? BLOCK_ERASE_32K_CMD : BLOCK_ERASE_CMD;
+    s_command.AddressMode     = QSPI_ADDRESS_1_LINE;
+    s_command.AddressSize     = QSPI_ADDRESS_24_BITS;
     s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
     s_command.DataMode          = QSPI_DATA_NONE;
     s_command.DummyCycles       = 0;
@@ -1110,6 +1151,11 @@ QSPIHandle::Result QSPIHandle::Erase(uint32_t start_addr, uint32_t end_addr)
 QSPIHandle::Result QSPIHandle::EraseSector(uint32_t address)
 {
     return pimpl_->EraseSector(address);
+}
+
+QSPIHandle::Result QSPIHandle::EraseBlock(uint32_t address, bool is_32k)
+{
+    return pimpl_->EraseBlock(address, is_32k);
 }
 
 void* QSPIHandle::GetData(uint32_t offset)
