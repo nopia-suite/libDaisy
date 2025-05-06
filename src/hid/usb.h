@@ -76,18 +76,8 @@ class UsbHandle
      */
     static void RunTask();
 
-    static void AudioTask();
-    static void MidiTask();
-    static void CdcTask();
-
-
   private:
 };
 
 } // namespace daisy
 #endif
-
-/* - Add support for other USB classes (currently only CDC is supported)
-- DMA setup
-*/
-/** @} */

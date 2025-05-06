@@ -49,7 +49,6 @@ hid/switch \
 hid/usb \
 hid/usb_midi \
 hid/tusb_midi \
-hid/tusb_audio \
 hid/wavplayer \
 hid/logger \
 hid/usb_descriptors \
