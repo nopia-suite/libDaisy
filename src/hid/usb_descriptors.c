@@ -25,6 +25,7 @@
 
 #include "bsp/board_api.h"
 #include "tusb.h"
+#include "usb_midi_multi.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -80,26 +81,31 @@ enum
 {
     ITF_NUM_CDC = 0,
     ITF_NUM_CDC_DATA,
-    ITF_NUM_MIDI_0,
-    ITF_NUM_MIDI_0_STREAMING,
-    ITF_NUM_MIDI_1,
-    ITF_NUM_MIDI_1_STREAMING,
+    ITF_NUM_MIDI,
+    ITF_NUM_MIDI_STREAMING,
     ITF_NUM_TOTAL
 };
 
+#ifndef CFG_TUD_MIDI_NUMCABLES_IN
+#define CFG_TUD_MIDI_NUMCABLES_IN 1
+#endif
+
+#ifndef CFG_TUD_MIDI_NUMCABLES_OUT
+#define CFG_TUD_MIDI_NUMCABLES_OUT 1
+#endif
+
 #define CONFIG_TOTAL_LEN                                    \
     (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) \
-     + (TUD_MIDI_DESC_LEN * CFG_TUD_MIDI)) // 2 MIDI interfaces
+     + TUD_MIDI_MULTI_DESC_LEN(CFG_TUD_MIDI_NUMCABLES_IN,   \
+                               CFG_TUD_MIDI_NUMCABLES_OUT))
+
 
 #define EPNUM_CDC_NOTIF 0x81
 #define EPNUM_CDC_OUT 0x02
 #define EPNUM_CDC_IN 0x82
 
-#define EPNUM_MIDI_0_OUT 0x03
-#define EPNUM_MIDI_0_IN 0x83
-
-#define EPNUM_MIDI_1_OUT 0x04
-#define EPNUM_MIDI_1_IN 0x84
+#define EPNUM_MIDI_OUT 0x03
+#define EPNUM_MIDI_IN 0x83
 
 // full speed configuration
 uint8_t const desc_fs_configuration[] = {
@@ -109,26 +115,21 @@ uint8_t const desc_fs_configuration[] = {
     // CDC: Interface number, string index, EP notification address and size, EP
     // data address (out, in) and size.
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC,
-                       4,
+                       0,
                        EPNUM_CDC_NOTIF,
                        8,
                        EPNUM_CDC_OUT,
                        EPNUM_CDC_IN,
                        64),
 
-    // 1st MIDI: Interface number, string index, EP Out & EP In address, EP size
-    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI_0,
-                        5,
-                        EPNUM_MIDI_0_OUT,
-                        EPNUM_MIDI_0_IN,
-                        64),
-
-    // 2nd MIDI: Interface number, string index, EP Out & EP In address, EP size
-    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI_1,
-                        6,
-                        EPNUM_MIDI_1_OUT,
-                        EPNUM_MIDI_1_IN,
-                        64),
+    // MIDI: Interface number, string index, EP Out & EP In address, EP size
+    TUD_MIDI_MULTI_DESCRIPTOR(ITF_NUM_MIDI,
+                              0,
+                              EPNUM_MIDI_OUT,
+                              EPNUM_MIDI_IN,
+                              64,
+                              CFG_TUD_MIDI_NUMCABLES_IN,
+                              CFG_TUD_MIDI_NUMCABLES_OUT),
 };
 
 #if TUD_OPT_HIGH_SPEED
@@ -142,26 +143,21 @@ uint8_t const desc_hs_configuration[] = {
     // CDC: Interface number, string index, EP notification address and size, EP
     // data address (out, in) and size.
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC,
-                       4,
+                       0,
                        EPNUM_CDC_NOTIF,
                        8,
                        EPNUM_CDC_OUT,
                        EPNUM_CDC_IN,
                        512),
 
-    // 1st MIDI: Interface number, string index, EP Out & EP In address, EP size
-    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI_0,
-                        5,
-                        EPNUM_MIDI_0_OUT,
-                        EPNUM_MIDI_0_IN,
-                        512),
-
-    // 2nd MIDI: Interface number, string index, EP Out & EP In address, EP size
-    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI_1,
-                        6,
-                        EPNUM_MIDI_1_OUT,
-                        EPNUM_MIDI_1_IN,
-                        512),
+    // MIDI: Interface number, string index, EP Out & EP In address, EP size
+    TUD_MIDI_MULTI_DESCRIPTOR(ITF_NUM_MIDI,
+                              0,
+                              EPNUM_MIDI_OUT,
+                              EPNUM_MIDI_IN,
+                              512,
+                              CFG_TUD_MIDI_NUMCABLES_IN,
+                              CFG_TUD_MIDI_NUMCABLES_OUT),
 };
 
 // other speed configuration
@@ -230,9 +226,6 @@ enum
     STRID_MANUFACTURER,
     STRID_PRODUCT,
     STRID_SERIAL,
-    STRID_CDC,
-    STRID_MIDI1,
-    STRID_MIDI2,
 };
 
 // array of pointer to string descriptors
@@ -242,8 +235,11 @@ char const *string_desc_arr[] = {
     "Nopia",                    // 2: Product
     NULL,                       // 3: Serials will use unique ID if possible
     "Nopia CDC",                // 4: CDC Interface
-    "Nopia MIDI Port 1",        // 5: First MIDI Interface
-    "Nopia MIDI Port 2",        // 6: Second MIDI Interface
+    "Nopia MIDI In Keys",
+    "Nopia MIDI In Bass",
+    "Nopia MIDI In Arp",
+    "Nopia MIDI In Synth",
+    "Nopia MIDI Out",
 };
 
 static uint16_t _desc_str[32 + 1];
