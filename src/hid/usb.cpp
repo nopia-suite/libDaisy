@@ -53,6 +53,14 @@ static void InitFS()
     {
         UsbErrorHandler();
     }
+
+#if CFG_TUD_CDC
+    // NOTE: This assumes CDC is the ITF #0 (see usb_descriptors.c, ITF enum)
+    while(!tud_cdc_ready())
+    {
+        tud_task();
+    }
+#endif
 }
 
 static void DeinitFS()
@@ -79,6 +87,14 @@ static void InitHS()
     {
         UsbErrorHandler();
     }
+
+#if CFG_TUD_CDC
+    // NOTE: This assumes CDC is the ITF #0 (see usb_descriptors.c, ITF enum)
+    while(!tud_cdc_ready())
+    {
+        tud_task();
+    }
+#endif
 }
 
 void UsbHandle::RunTask()
