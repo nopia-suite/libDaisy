@@ -38,50 +38,19 @@ UsbHandle::ReceiveCallback rx_callback;
 
 static void InitFS()
 {
-    dsy_gpio led;
-    led.pin.port = DSY_GPIOC;
-    led.pin.pin  = 7;
-    led.mode     = DSY_GPIO_MODE_OUTPUT_PP;
-
-    for(int i = 0; i < 5; i++)
-    {
-        dsy_gpio_write(&led, true);
-        HAL_Delay(100);
-        dsy_gpio_write(&led, false);
-        HAL_Delay(100);
-    }
-
-    HAL_Delay(1000);
-
     rx_callback = DummyRxCallback;
     if(!usb_fs_hw_initialized)
     {
         usb_fs_hw_initialized = true;
         if(USBD_Init(&hUsbDeviceFS, NULL, DEVICE_FS) != USBD_OK)
         {
-            // flash LEDs
-            for(int i = 0; i < 3; i++)
-            {
-                dsy_gpio_write(&led, true);
-                HAL_Delay(100);
-                dsy_gpio_write(&led, false);
-                HAL_Delay(100);
-            }
             UsbErrorHandler();
         }
     }
 
-    auto result = tud_init(BOARD_TUD_RHPORT);
+    auto result = tud_init(BOARD_TUD_FS_RHPORT);
     if(!result)
     {
-        // flash LEDs
-        for(int i = 0; i < 2; i++)
-        {
-            dsy_gpio_write(&led, true);
-            HAL_Delay(100);
-            dsy_gpio_write(&led, false);
-            HAL_Delay(100);
-        }
         UsbErrorHandler();
     }
 }
@@ -105,7 +74,7 @@ static void InitHS()
             UsbErrorHandler();
         }
     }
-    auto result = tud_init(1);
+    auto result = tud_init(BOARD_TUD_HS_RHPORT);
     if(!result)
     {
         UsbErrorHandler();
@@ -117,7 +86,7 @@ void UsbHandle::RunTask()
     tud_task();
 }
 
-using DBG = daisy::Logger<daisy::LOGGER_INTERNAL>;
+using DBG = daisy::Logger<daisy::LOGGER_EXTERNAL>;
 
 // uint16_t count = 0;
 //
@@ -229,6 +198,6 @@ extern "C"
 
     void OTG_FS_IRQHandler(void)
     {
-        tud_int_handler(BOARD_TUD_RHPORT);
+        tud_int_handler(BOARD_TUD_FS_RHPORT);
     }
 }

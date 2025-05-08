@@ -36,8 +36,11 @@ extern "C"
 //--------------------------------------------------------------------+
 
 // RHPort number used for device can be defined by board.mk, default to port 0
+#define BOARD_TUD_FS_RHPORT 0
+#define BOARD_TUD_HS_RHPORT 1
+
 #ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT 0
+#define BOARD_TUD_RHPORT BOARD_TUD_FS_RHPORT
 #endif
 
 // RHPort max operational speed can defined by board.mk
