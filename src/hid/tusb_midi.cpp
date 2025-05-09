@@ -4,6 +4,7 @@
 #include "hid/tusb_midi.h"
 #include "system.h"
 #include "tusb.h"
+#include "tusb_config.h"
 
 using namespace daisy;
 
@@ -15,7 +16,8 @@ class MidiTUsbTransport::Impl
         config_    = config;
         rx_active_ = false;
 
-        auto port_id = config.periph == Config::INTERNAL ? 0 : 1;
+        auto port_id = config.periph == Config::INTERNAL ? BOARD_TUD_FS_RHPORT
+                                                         : BOARD_TUD_HS_RHPORT;
         tud_init(port_id);
     }
 
