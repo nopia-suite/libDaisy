@@ -12,7 +12,6 @@
 #include "hid/usb_midi.h"
 #include "sys/dma.h"
 #include "sys/system.h"
-#include "hid/tusb_midi.h"
 
 namespace daisy
 {
@@ -126,6 +125,9 @@ class MidiUartTransport
     /** @brief sends the buffer of bytes out of the UART peripheral */
     inline void Tx(uint8_t* buff, size_t size) { uart_.PollTx(buff, size); }
 
+    // noop (only used for USB MIDI)
+    inline void ProcessRx(){};
+
   private:
     UartHandler         uart_;
     uint8_t*            rx_buffer;
@@ -198,6 +200,28 @@ class MidiHandler
         transport_.StartRx(MidiHandler::ParseCallback, this);
     }
 
+    /** Process any received MIDI messages
+     *
+     * For transports that require polling (like TinyUSB-based MIDI),
+     * this method should be called regularly to process incoming MIDI data
+     * and add parsed events to the internal queue.
+     *
+     * For callback-based transports (like UART), this method does nothing.
+     */
+    void ProcessReceive()
+    {
+        // Add protection against recursive calls or deadlocks
+        static bool processing = false;
+
+        // If we're already processing, don't try to re-enter
+        if(processing)
+            return;
+
+        processing = true;
+        transport_.ProcessRx();
+        processing = false;
+    }
+
     /** Start listening */
     void Listen()
     {
@@ -210,6 +234,9 @@ class MidiHandler
             transport_.FlushRx();
             StartReceive();
         }
+
+        // For TinyUSB-based transports, also process any received data
+        ProcessReceive();
     }
 
     /** Checks if there are unhandled messages in the queue
@@ -269,7 +296,6 @@ class MidiHandler
  * */
 using MidiUartHandler = MidiHandler<MidiUartTransport>;
 using MidiUsbHandler  = MidiHandler<MidiUsbTransport>;
-using MidiTUsbHandler = MidiHandler<MidiTUsbTransport>;
 
 /** @} */
 } // namespace daisy

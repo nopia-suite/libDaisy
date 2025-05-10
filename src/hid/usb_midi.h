@@ -50,11 +50,18 @@ class MidiUsbTransport
     void FlushRx();
     void Tx(uint8_t* buffer, size_t size);
 
+    /**
+     * Process any received MIDI messages
+     * This should be called regularly (e.g., in the main loop or a timer handler)
+     * to handle incoming MIDI data through TinyUSB
+     */
+    void ProcessRx();
+
     class Impl;
 
     MidiUsbTransport() : pimpl_(nullptr) {}
     ~MidiUsbTransport() {}
-    MidiUsbTransport(const MidiUsbTransport& other) = default;
+    MidiUsbTransport(const MidiUsbTransport& other)            = default;
     MidiUsbTransport& operator=(const MidiUsbTransport& other) = default;
 
   private:

@@ -15,6 +15,9 @@ static void UsbErrorHandler();
 bool usb_fs_hw_initialized = false;
 bool usb_hs_hw_initialized = false;
 
+// Prevents multiple calls to tud_task() from different contexts
+static bool tud_task_running = false;
+
 // Externs for IRQ Handlers
 extern "C"
 {
@@ -99,7 +102,17 @@ static void InitHS()
 
 void UsbHandle::RunTask()
 {
+    // Protect against reentrant calls
+    if(tud_task_running)
+        return;
+
+    tud_task_running = true;
     tud_task();
+
+    // Handle any CDC flushes here centrally
+    tud_cdc_write_flush();
+
+    tud_task_running = false;
 }
 
 using DBG = daisy::Logger<daisy::LOGGER_EXTERNAL>;
@@ -161,15 +174,15 @@ void UsbHandle::DeInit(UsbPeriph dev)
 
 UsbHandle::Result UsbHandle::TransmitInternal(uint8_t *buff, size_t size)
 {
+    // Don't call write_flush immediately, let the USB task handle it
     auto ret = tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
-    tud_cdc_write_flush();
     return ret;
 }
 
 UsbHandle::Result UsbHandle::TransmitExternal(uint8_t *buff, size_t size)
 {
+    // Don't call write_flush immediately, let the USB task handle it
     auto ret = tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
-    tud_cdc_write_flush();
     return ret;
 }
 

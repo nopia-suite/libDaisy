@@ -91,7 +91,7 @@ void Logger<dest>::TransmitBuf()
             tx_ptr_ = 0;
         }
         /** otherwise do not reset tx_ptr_
-         *  accumulate data while buffer size permits 
+         *  accumulate data while buffer size permits
          */
     }
 }
@@ -129,6 +129,8 @@ template class Logger<LOGGER_EXTERNAL>;
 template class Logger<LOGGER_SEMIHOST>;
 
 /** LoggerImpl static member variables */
-UsbHandle LoggerImpl<LOGGER_INTERNAL>::usb_handle_;
-UsbHandle LoggerImpl<LOGGER_EXTERNAL>::usb_handle_;
+UsbHandle                      LoggerImpl<LOGGER_INTERNAL>::usb_handle_;
+UsbHandle                      LoggerImpl<LOGGER_EXTERNAL>::usb_handle_;
+FIFO<LogMessage, kLogFifoSize> LoggerImpl<LOGGER_INTERNAL>::log_fifo_;
+FIFO<LogMessage, kLogFifoSize> LoggerImpl<LOGGER_EXTERNAL>::log_fifo_;
 } // namespace daisy
