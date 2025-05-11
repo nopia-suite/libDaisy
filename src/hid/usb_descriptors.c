@@ -38,8 +38,9 @@
     (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) \
      | _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4))
 
-#define USB_VID 0xCafe
-#define USB_BCD 0x0200
+#define USB_VID 0xCafe     // TODO: Replace with Nopia VID once we get one
+#define USB_BCD 0x0200     // USB 2.0
+#define USB_DEV_BCD 0x0100 // v1.0
 
 //--------------------------------------------------------------------+
 // Device Descriptors
@@ -58,7 +59,7 @@ tusb_desc_device_t const desc_device = {
 
     .idVendor  = USB_VID,
     .idProduct = USB_PID,
-    .bcdDevice = 0x0100,
+    .bcdDevice = USB_DEV_BCD,
 
     .iManufacturer = 0x01,
     .iProduct      = 0x02,
@@ -98,7 +99,6 @@ enum
     (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) \
      + TUD_MIDI_MULTI_DESC_LEN(CFG_TUD_MIDI_NUMCABLES_IN,   \
                                CFG_TUD_MIDI_NUMCABLES_OUT))
-
 
 #define EPNUM_CDC_NOTIF 0x81
 #define EPNUM_CDC_OUT 0x02
@@ -231,15 +231,16 @@ enum
 // array of pointer to string descriptors
 char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-    "Nopia Friends",            // 1: Manufacturer
+    "Nopia & Friends",          // 1: Manufacturer
     "Nopia",                    // 2: Product
     NULL,                       // 3: Serials will use unique ID if possible
     "Nopia CDC",                // 4: CDC Interface
-    "Nopia MIDI In Keys",
-    "Nopia MIDI In Bass",
-    "Nopia MIDI In Arp",
-    "Nopia MIDI In Synth",
-    "Nopia MIDI Out",
+    "Nopia MIDI Out Keys",      // 5: MIDI Interface ...
+    "Nopia MIDI Out Bass",
+    "Nopia MIDI Out Arp",
+    "Nopia MIDI Out Synth A",
+    "Nopia MIDI Out Synth B",
+    "Nopia MIDI In",
 };
 
 static uint16_t _desc_str[32 + 1];

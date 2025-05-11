@@ -110,7 +110,7 @@ extern "C"
 #define CFG_TUD_CDC_EP_BUFSIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
 // Number of virtual MIDI cables IN to the host
-#define CFG_TUD_MIDI_NUMCABLES_IN 4
+#define CFG_TUD_MIDI_NUMCABLES_IN 5
 // Number of virtual MIDI cables OUT from the host
 #define CFG_TUD_MIDI_NUMCABLES_OUT 1
 
