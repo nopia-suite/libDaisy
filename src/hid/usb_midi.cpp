@@ -22,7 +22,9 @@ class MidiUsbTransport::Impl
     void FlushRx()
     { /* No need for explicit flushing with TinyUSB */
     }
+
     void Tx(uint8_t* buffer, size_t size);
+    void Tx(uint8_t cable_num, uint8_t* buffer, size_t size);
 
     void ProcessRx(); // Process any pending received MIDI packets
 
@@ -55,10 +57,19 @@ void MidiUsbTransport::Impl::Init(Config config)
 
 void MidiUsbTransport::Impl::Tx(uint8_t* buffer, size_t size)
 {
+    // Always use cable 0 when not specified
+    Tx(0, buffer, size);
+}
+
+void MidiUsbTransport::Impl::Tx(uint8_t cable_num, uint8_t* buffer, size_t size)
+{
     if(!tud_midi_mounted())
     {
         return;
     }
+
+    // Ensure cable number is valid (0-15)
+    cable_num = cable_num & 0x0F;
 
     // We'll handle raw MIDI messages here, and encode them for USB MIDI
     if(size == 0 || buffer == nullptr)
@@ -86,11 +97,11 @@ void MidiUsbTransport::Impl::Tx(uint8_t* buffer, size_t size)
         {
             if(msg_size == 3)
             {
-                tud_midi_stream_write(0, buffer, 3);
+                tud_midi_n_stream_write(0, cable_num, buffer, 3);
             }
             else if(msg_size == 2)
             {
-                tud_midi_stream_write(0, buffer, 2);
+                tud_midi_n_stream_write(0, cable_num, buffer, 2);
             }
         }
     }
@@ -113,7 +124,7 @@ void MidiUsbTransport::Impl::Tx(uint8_t* buffer, size_t size)
             }
 
             // TinyUSB has a helper function to send SysEx
-            tud_midi_stream_write(0, buffer, sysex_size);
+            tud_midi_n_stream_write(0, cable_num, buffer, sysex_size);
         }
         // Other system messages
         else if(buffer[0] == 0xF1 || buffer[0] == 0xF3)
@@ -121,7 +132,7 @@ void MidiUsbTransport::Impl::Tx(uint8_t* buffer, size_t size)
             // 2-byte messages (Time Code, Song Select)
             if(size >= 2)
             {
-                tud_midi_stream_write(0, buffer, 2);
+                tud_midi_n_stream_write(0, cable_num, buffer, 2);
             }
         }
         else if(buffer[0] == 0xF2)
@@ -129,13 +140,13 @@ void MidiUsbTransport::Impl::Tx(uint8_t* buffer, size_t size)
             // 3-byte message (Song Position)
             if(size >= 3)
             {
-                tud_midi_stream_write(0, buffer, 3);
+                tud_midi_n_stream_write(0, cable_num, buffer, 3);
             }
         }
         else
         {
             // Single-byte messages (realtime)
-            tud_midi_stream_write(0, buffer, 1);
+            tud_midi_n_stream_write(0, cable_num, buffer, 1);
         }
     }
 }
@@ -255,6 +266,11 @@ void MidiUsbTransport::FlushRx()
 void MidiUsbTransport::Tx(uint8_t* buffer, size_t size)
 {
     pimpl_->Tx(buffer, size);
+}
+
+void MidiUsbTransport::Tx(uint8_t cable_num, uint8_t* buffer, size_t size)
+{
+    pimpl_->Tx(cable_num, buffer, size);
 }
 
 void MidiUsbTransport::ProcessRx()
