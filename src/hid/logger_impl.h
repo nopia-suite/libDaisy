@@ -24,7 +24,8 @@ enum LoggerDestination
 /** Log message structure for queuing */
 struct LogMessage
 {
-    static const size_t kMaxMessageSize = 128;
+    // NOTE: kMaxMessageSize should not be larger than CFG_TUD_CDC_EP_BUFSIZE (see hid/tusb_config.h)
+    static const size_t kMaxMessageSize = 64;
     char                message[kMaxMessageSize];
     size_t              length;
 

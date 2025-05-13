@@ -4,6 +4,7 @@
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
 #include "tusb.h"
+#include "tusb_config.h"
 #include "system.h"
 #include "hid/logger.h"
 #include "per/gpio.h"
@@ -139,14 +140,24 @@ void UsbHandle::DeInit(UsbPeriph dev)
     HAL_PWREx_DisableUSBVoltageDetector();
 }
 
+static UsbHandle::Result Transmit(uint8_t *buff, size_t size)
+{
+    auto res = tud_cdc_write(buff, size);
+    if(res != size)
+        return UsbHandle::Result::ERR;
+
+    tud_cdc_write_flush();
+    return UsbHandle::Result::OK;
+}
+
 UsbHandle::Result UsbHandle::TransmitInternal(uint8_t *buff, size_t size)
 {
-    return tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
+    return Transmit(buff, size);
 }
 
 UsbHandle::Result UsbHandle::TransmitExternal(uint8_t *buff, size_t size)
 {
-    return tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
+    return Transmit(buff, size);
 }
 
 void UsbHandle::SetReceiveCallback(ReceiveCallback cb, UsbPeriph dev)
