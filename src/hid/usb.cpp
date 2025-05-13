@@ -93,10 +93,6 @@ void UsbHandle::RunTask()
 
     tud_task_running = true;
     tud_task();
-
-    // Handle any CDC flushes here centrally
-    tud_cdc_write_flush();
-
     tud_task_running = false;
 }
 
