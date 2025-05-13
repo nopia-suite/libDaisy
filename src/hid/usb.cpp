@@ -140,7 +140,15 @@ static UsbHandle::Result Transmit(uint8_t *buff, size_t size)
 {
     auto res = tud_cdc_write(buff, size);
     if(res != size)
+    {
         return UsbHandle::Result::ERR;
+    }
+
+    // If we exactly filled a packet, send a ZLP to indicate completion
+    if(size % CFG_TUD_CDC_EP_BUFSIZE == 0)
+    {
+        tud_cdc_write(NULL, 0);
+    }
 
     tud_cdc_write_flush();
     return UsbHandle::Result::OK;
