@@ -115,23 +115,6 @@ void UsbHandle::RunTask()
     tud_task_running = false;
 }
 
-using DBG = daisy::Logger<daisy::LOGGER_EXTERNAL>;
-
-// uint16_t count = 0;
-//
-// void UsbHandle::CdcTask()
-// {
-//     char buff[64];
-//     for(auto i = 0; i < 2; i++)
-//     {
-//         sprintf(buff, "[%d] tick: %d\n", i, count);
-//         auto size = strlen(buff);
-//         tud_cdc_n_write(i, buff, size);
-//         tud_cdc_n_write_flush(i);
-//     }
-//     count++;
-// }
-
 static void DeinitHS()
 {
     if(USBD_DeInit(&hUsbDeviceHS) != USBD_OK)
@@ -174,16 +157,12 @@ void UsbHandle::DeInit(UsbPeriph dev)
 
 UsbHandle::Result UsbHandle::TransmitInternal(uint8_t *buff, size_t size)
 {
-    // Don't call write_flush immediately, let the USB task handle it
-    auto ret = tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
-    return ret;
+    return tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
 }
 
 UsbHandle::Result UsbHandle::TransmitExternal(uint8_t *buff, size_t size)
 {
-    // Don't call write_flush immediately, let the USB task handle it
-    auto ret = tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
-    return ret;
+    return tud_cdc_write(buff, size) == size ? Result::OK : Result::ERR;
 }
 
 void UsbHandle::SetReceiveCallback(ReceiveCallback cb, UsbPeriph dev)
