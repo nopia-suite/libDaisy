@@ -56,7 +56,6 @@ add_library(${TARGET} STATIC
     ${MODULE_DIR}/hid/usb_host.cpp
     ${MODULE_DIR}/hid/usb_midi.cpp
     ${MODULE_DIR}/hid/tusb_midi.cpp
-    ${MODULE_DIR}/hid/tusb_audio.cpp
     ${MODULE_DIR}/hid/wavplayer.cpp
     ${MODULE_DIR}/hid/logger.cpp
     ${MODULE_DIR}/per/adc.cpp
