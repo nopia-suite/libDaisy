@@ -110,6 +110,7 @@ class LoggerImpl<LOGGER_INTERNAL>
             if(TransmitDirect(msg.message, msg.length))
             {
                 log_fifo_.PopFront();
+                System::DelayUs(100);
             }
         }
     }
@@ -168,6 +169,7 @@ class LoggerImpl<LOGGER_EXTERNAL>
             if(TransmitDirect(msg.message, msg.length))
             {
                 log_fifo_.PopFront();
+                System::DelayUs(100);
             }
         }
     }
