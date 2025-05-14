@@ -19,6 +19,10 @@ bool usb_hs_hw_initialized = false;
 // Prevents multiple calls to tud_task() from different contexts
 static bool tud_task_running = false;
 
+// Add these near the other global declarations
+static UsbHandle::ReceiveCallback usb_rx_callback = nullptr;
+static uint8_t                    rx_buffer[CFG_TUD_CDC_RX_BUFSIZE];
+
 // Externs for IRQ Handlers
 extern "C"
 {
@@ -138,8 +142,15 @@ void UsbHandle::DeInit(UsbPeriph dev)
 
 static UsbHandle::Result Transmit(uint8_t *buff, size_t size)
 {
-    auto res = tud_cdc_write(buff, size);
-    if(res != size)
+    // Check if buffer is valid and non-empty
+    if(buff == nullptr || size == 0)
+    {
+        return UsbHandle::Result::ERR;
+    }
+
+    // Write the data
+    size_t written = tud_cdc_write(buff, size);
+    if(written != size)
     {
         return UsbHandle::Result::ERR;
     }
@@ -150,6 +161,7 @@ static UsbHandle::Result Transmit(uint8_t *buff, size_t size)
         tud_cdc_write(NULL, 0);
     }
 
+    // Flush the data
     tud_cdc_write_flush();
     return UsbHandle::Result::OK;
 }
@@ -166,20 +178,38 @@ UsbHandle::Result UsbHandle::TransmitExternal(uint8_t *buff, size_t size)
 
 void UsbHandle::SetReceiveCallback(ReceiveCallback cb, UsbPeriph dev)
 {
-    // This is pretty silly, but we're working iteritavely...
-    rx_callback = cb;
-    rxcallback  = (CDC_ReceiveCallback)rx_callback;
+    // Store the callback function
+    usb_rx_callback = cb;
 
-    switch(dev)
-    {
-        case FS_INTERNAL: CDC_Set_Rx_Callback_FS(rxcallback); break;
-        case FS_EXTERNAL: CDC_Set_Rx_Callback_HS(rxcallback); break;
-        case FS_BOTH:
-            CDC_Set_Rx_Callback_FS(rxcallback);
-            CDC_Set_Rx_Callback_HS(rxcallback);
-            break;
-        default: break;
-    }
+    // No need to do anything else, as TinyUSB will call tud_cdc_rx_cb()
+    // whenever data is received, which will then call our callback
+
+    // Note: We ignore the dev parameter since TinyUSB uses the itf parameter
+    // in the callback to distinguish between different CDC interfaces
+    (void)dev;
+}
+
+size_t UsbHandle::GetRxAvailable() const
+{
+    return tud_cdc_available();
+}
+
+size_t UsbHandle::Receive(uint8_t *buff, size_t size)
+{
+    // If using callbacks, we might want to buffer data differently
+    // For now, we just pass through to tud_cdc_read
+    return tud_cdc_read(buff, size);
+}
+
+UsbHandle::Result UsbHandle::Flush()
+{
+    tud_cdc_write_flush();
+    return Result::OK;
+}
+
+bool UsbHandle::IsTransmitReady(size_t size) const
+{
+    return tud_cdc_write_available() >= size;
 }
 
 // Static Function Implementation
@@ -206,5 +236,31 @@ extern "C"
     void OTG_FS_IRQHandler(void)
     {
         tud_int_handler(BOARD_TUD_FS_RHPORT);
+    }
+
+    // Add this implementation of TinyUSB's callback function
+    void tud_cdc_rx_cb(uint8_t itf)
+    {
+        (void)itf; // Unused parameter
+
+        if(usb_rx_callback != nullptr)
+        {
+            // Get the amount of data available
+            uint32_t count = tud_cdc_available();
+
+            // Don't exceed buffer size
+            if(count > sizeof(rx_buffer))
+                count = sizeof(rx_buffer);
+
+            // Only call the callback if there's data
+            if(count > 0)
+            {
+                // Read the data into our buffer
+                uint32_t read = tud_cdc_read(rx_buffer, count);
+
+                // Call user callback with the data
+                usb_rx_callback(rx_buffer, &read);
+            }
+        }
     }
 }

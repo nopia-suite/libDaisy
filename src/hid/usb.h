@@ -76,6 +76,33 @@ class UsbHandle
      */
     static void RunTask();
 
+    /**
+     * @brief Check number of bytes available in the CDC receive buffer
+     * @return Number of bytes available to read
+     */
+    size_t GetRxAvailable() const;
+
+    /**
+     * @brief Read data from the CDC receive buffer
+     * @param buff Buffer to read data into
+     * @param size Maximum number of bytes to read
+     * @return Number of bytes actually read
+     */
+    size_t Receive(uint8_t* buff, size_t size);
+
+    /**
+     * @brief Flush the CDC transmit buffer
+     * @return Result::OK if successful, Result::ERR otherwise
+     */
+    Result Flush();
+
+    /**
+     * @brief Check if the CDC transmit buffer has space available
+     * @param size Number of bytes to check space for
+     * @return true if there's enough space, false otherwise
+     */
+    bool IsTransmitReady(size_t size) const;
+
   private:
 };
 
