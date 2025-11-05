@@ -23,12 +23,17 @@
 This should be used primarily for DMA buffers, and the like.
 */
 #define DMA_BUFFER_MEM_SECTION __attribute__((section(".sram1_bss")))
-/** 
-THE DTCM RAM section is also non-cached. However, is not suitable 
-for DMA transfers. Performance is on par with internal SRAM w/ 
+/**
+THE DTCM RAM section is also non-cached. However, is not suitable
+for DMA transfers. Performance is on par with internal SRAM w/
 cache enabled.
 */
 #define DTCM_MEM_SECTION __attribute__((section(".dtcmram_bss")))
+
+// Cached region of D2 RAM
+// NOTE: This section can behave strangely on reset,
+//       always be sure to initialize memory
+#define DSY_D2_BSS __attribute__((section(".d2_bss")))
 
 #define FBIPMAX 0.999985f             /**< close to 1.0f-LSB at 16 bit */
 #define FBIPMIN (-FBIPMAX)            /**< - (1 - LSB) */

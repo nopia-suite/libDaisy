@@ -40,7 +40,7 @@ struct LogMessage
 };
 
 /** FIFO capacity for log messages */
-static const size_t kLogFifoSize = 32;
+static const size_t kLogFifoSize = 128;
 
 /** @brief Logging I/O underlying implementation
  *  @author Alexander Petrov-Savchenko (axp@soft-amp.com)
@@ -76,7 +76,7 @@ class LoggerImpl
     }
 
     /** Wait for host connection (no-op for non-USB destinations) */
-    static void WaitForHostConnection(){};
+    static void WaitForHostConnection() {};
 };
 
 
@@ -268,7 +268,7 @@ class LoggerImpl<LOGGER_SEMIHOST>
     }
 
     /** Wait for host connection (no-op for non-USB destinations) */
-    static void WaitForHostConnection(){};
+    static void WaitForHostConnection() {};
 };
 
 } /* namespace daisy */
