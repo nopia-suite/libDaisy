@@ -4,6 +4,7 @@
 #include <cassert>
 #include "logger.h"
 #include "sys/system.h"
+#include "daisy_core.h"
 
 namespace daisy
 {
@@ -128,8 +129,11 @@ template class Logger<LOGGER_EXTERNAL>;
 template class Logger<LOGGER_SEMIHOST>;
 
 /** LoggerImpl static member variables */
-UsbHandle                      LoggerImpl<LOGGER_INTERNAL>::usb_handle_;
-UsbHandle                      LoggerImpl<LOGGER_EXTERNAL>::usb_handle_;
-FIFO<LogMessage, kLogFifoSize> LoggerImpl<LOGGER_INTERNAL>::log_fifo_;
-FIFO<LogMessage, kLogFifoSize> LoggerImpl<LOGGER_EXTERNAL>::log_fifo_;
+UsbHandle LoggerImpl<LOGGER_INTERNAL>::usb_handle_;
+UsbHandle LoggerImpl<LOGGER_EXTERNAL>::usb_handle_;
+
+DSY_D2_BSS FIFO<LogMessage, kLogFifoSize>
+           LoggerImpl<LOGGER_INTERNAL>::log_fifo_;
+DSY_D2_BSS FIFO<LogMessage, kLogFifoSize>
+           LoggerImpl<LOGGER_EXTERNAL>::log_fifo_;
 } // namespace daisy

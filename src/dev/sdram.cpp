@@ -141,7 +141,7 @@ SdramHandle::Result SdramHandle::DeviceInit()
     HAL_SDRAM_SendCommand(&dsy_sdram.hsdram, &Command, 0x1000);
 
     /* Step 7: Program the external memory mode register */
-    tmpmrd = (uint32_t)SDRAM_MODEREG_BURST_LENGTH_4
+    tmpmrd = (uint32_t)SDRAM_MODEREG_BURST_LENGTH_2
              | SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL | SDRAM_MODEREG_CAS_LATENCY_3
              | SDRAM_MODEREG_WRITEBURST_MODE_SINGLE;
     //SDRAM_MODEREG_OPERATING_MODE_STANDARD | // Used in example, but can't find reference except for "Test Mode"
@@ -154,8 +154,15 @@ SdramHandle::Result SdramHandle::DeviceInit()
     /* Send the command */
     HAL_SDRAM_SendCommand(&dsy_sdram.hsdram, &Command, 0x1000);
 
-    //HAL_SDRAM_ProgramRefreshRate(hsdram, 0x56A - 20);
-    HAL_SDRAM_ProgramRefreshRate(&dsy_sdram.hsdram, 0x81A - 20);
+    // HAL_SDRAM_ProgramRefreshRate(&dsy_sdram.hsdram, 0x81A - 20);
+
+    // optimized refresh rate for 100mhz clock
+    // default libDaisy value is far too big
+    /*
+            Refresh rate = 64ms / 8192 rows = 7.81uS
+            7.81uS * 100Mhz = 781 - 20 = 761
+    */
+    HAL_SDRAM_ProgramRefreshRate(&dsy_sdram.hsdram, 762);
     return Result::OK;
 }
 
@@ -204,7 +211,7 @@ static void HAL_FMC_MspInit(void)
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
 
-    /** FMC GPIO Configuration  
+    /** FMC GPIO Configuration
     PE1   ------> FMC_NBL1
     PE0   ------> FMC_NBL0
     PG15   ------> FMC_SDNCAS
@@ -368,7 +375,7 @@ static void HAL_FMC_MspDeInit(void)
     /* Peripheral clock enable */
     __HAL_RCC_FMC_CLK_DISABLE();
 
-    /** FMC GPIO Configuration  
+    /** FMC GPIO Configuration
     PE1   ------> FMC_NBL1
     PE0   ------> FMC_NBL0
     PG15   ------> FMC_SDNCAS
