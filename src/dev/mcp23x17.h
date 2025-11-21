@@ -370,10 +370,10 @@ class Mcp23X17
      */
     uint16_t Read()
     {
-        uint8_t a = ReadPort(MCPPort::A);
-        uint8_t b = ReadPort(MCPPort::B);
+        uint8_t portA, portB;
+        transport.ReadReg(MCPRegister::GPIO_A, portA, portB);
 
-        pin_data = a | b << 8;
+        pin_data = portA | (portB << 8);
         return pin_data;
     }
 
