@@ -180,7 +180,7 @@ class Mcp23X17
         //HAEN =     0 : hardware address pin is always enabled on 23017
         //ODR =     1 : open drain output
         //INTPOL =     0 : interrupt active low
-        transport.WriteReg(MCPRegister::IOCON, 0b01100110);
+        transport.WriteReg(MCPRegister::IOCON, 0b01100100);
 
         // Enable all pull up resistors (will be effective for input pins only)
         transport.WriteReg(MCPRegister::GPPU_A, 0xFF, 0xFF);
