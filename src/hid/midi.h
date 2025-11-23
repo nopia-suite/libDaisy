@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <cstring>
 #include "per/uart.h"
 #include "util/ringbuffer.h"
 #include "util/FIFO.h"
@@ -123,8 +124,22 @@ class MidiUartTransport
     /** @brief This is a no-op for UART transport - Rx is via DMA callback with circular buffer */
     inline void FlushRx() {}
 
-    /** @brief sends the buffer of bytes out of the UART peripheral */
-    inline void Tx(uint8_t* buff, size_t size) { uart_.PollTx(buff, size); }
+    /** @brief sends the buffer of bytes out of the UART peripheral using DMA (non-blocking) */
+    inline void Tx(uint8_t* buff, size_t size) { DmaTx(buff, size); }
+
+    /** @brief sends the buffer of bytes out of the UART peripheral using DMA (non-blocking)
+     *  @details Copies message to internal buffer to ensure DMA safety, then initiates DMA transfer.
+     *           If DMA is busy, the UART handler will queue the transfer internally.
+     */
+    inline void DmaTx(uint8_t* buff, size_t size)
+    {
+        // Copy to persistent buffer to ensure DMA safety
+        // Clamp size to buffer capacity to prevent memory corruption
+        size_t safe_size
+            = size <= sizeof(tx_dma_buffer_) ? size : sizeof(tx_dma_buffer_);
+        memcpy(tx_dma_buffer_, buff, safe_size);
+        uart_.DmaTransmit(tx_dma_buffer_, safe_size, nullptr, nullptr, nullptr);
+    }
 
     /**
      * Send MIDI data to a specific virtual cable (port)
@@ -139,6 +154,19 @@ class MidiUartTransport
         Tx(buffer, size);
     }
 
+    /**
+     * Send MIDI data using DMA to a specific virtual cable (port)
+     * For UART, this ignores the cable number since there's only one output
+     * @param cable_num Ignored for UART transport
+     * @param buffer MIDI message bytes
+     * @param size Size of the MIDI message
+     */
+    void DmaTx(uint8_t cable_num, uint8_t* buffer, size_t size)
+    {
+        // Ignore cable number for UART
+        DmaTx(buffer, size);
+    }
+
     // noop (only used for USB MIDI)
     inline void ProcessRx(){};
 
@@ -148,6 +176,9 @@ class MidiUartTransport
     size_t              rx_buffer_size;
     void*               parse_context_;
     MidiRxParseCallback parse_callback_;
+
+    // DMA-safe buffer for transmission (MIDI messages are max 3 bytes)
+    uint8_t tx_dma_buffer_[4];
 
     /** Static callback for Uart MIDI that occurs when
          *  new data is available from the peripheral.
