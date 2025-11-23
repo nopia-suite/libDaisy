@@ -2,6 +2,7 @@
 #include "usbd_cdc.h"
 #include "usbh_midi.h"
 #include "hid/usb_midi.h"
+#include "util/scopedirqblocker.h"
 #include <cassert>
 #include "tusb.h"
 
@@ -86,74 +87,79 @@ void MidiUsbTransport::Impl::Tx(uint8_t cable_num, uint8_t* buffer, size_t size)
         return;
     }
 
-    // For basic Channel Voice messages (the most common case)
-    if((buffer[0] & 0x80) && (buffer[0] & 0xF0) != 0xF0)
+    // Critical section to protect FIFO writes from USB interrupt handler
     {
-        uint8_t msg_type = buffer[0] & 0xF0;
+        ScopedIrqBlocker block;
 
-        // Determine message size based on status byte
-        size_t msg_size = 3; // Most common case for note on/off, CC, etc.
+        // For basic Channel Voice messages (the most common case)
+        if((buffer[0] & 0x80) && (buffer[0] & 0xF0) != 0xF0)
+        {
+            uint8_t msg_type = buffer[0] & 0xF0;
 
-        if(msg_type == 0xC0 || msg_type == 0xD0)
-        {
-            msg_size = 2; // Program change and Channel pressure
-        }
+            // Determine message size based on status byte
+            size_t msg_size = 3; // Most common case for note on/off, CC, etc.
 
-        // Ensure we have enough bytes for the full message
-        if(size >= msg_size)
-        {
-            if(msg_size == 3)
+            if(msg_type == 0xC0 || msg_type == 0xD0)
             {
-                tud_midi_n_stream_write(0, cable_num, buffer, 3);
-            }
-            else if(msg_size == 2)
-            {
-                tud_midi_n_stream_write(0, cable_num, buffer, 2);
-            }
-        }
-    }
-    // System Common and System Real-Time messages
-    else if((buffer[0] & 0xF0) == 0xF0)
-    {
-        // SysEx message - special handling required
-        if(buffer[0] == 0xF0)
-        {
-            // Find end of SysEx
-            size_t sysex_size = 1;
-            while(sysex_size < size && buffer[sysex_size] != 0xF7)
-            {
-                sysex_size++;
-            }
-            // Include the end marker
-            if(sysex_size < size && buffer[sysex_size] == 0xF7)
-            {
-                sysex_size++;
+                msg_size = 2; // Program change and Channel pressure
             }
 
-            // TinyUSB has a helper function to send SysEx
-            tud_midi_n_stream_write(0, cable_num, buffer, sysex_size);
-        }
-        // Other system messages
-        else if(buffer[0] == 0xF1 || buffer[0] == 0xF3)
-        {
-            // 2-byte messages (Time Code, Song Select)
-            if(size >= 2)
+            // Ensure we have enough bytes for the full message
+            if(size >= msg_size)
             {
-                tud_midi_n_stream_write(0, cable_num, buffer, 2);
+                if(msg_size == 3)
+                {
+                    tud_midi_n_stream_write(0, cable_num, buffer, 3);
+                }
+                else if(msg_size == 2)
+                {
+                    tud_midi_n_stream_write(0, cable_num, buffer, 2);
+                }
             }
         }
-        else if(buffer[0] == 0xF2)
+        // System Common and System Real-Time messages
+        else if((buffer[0] & 0xF0) == 0xF0)
         {
-            // 3-byte message (Song Position)
-            if(size >= 3)
+            // SysEx message - special handling required
+            if(buffer[0] == 0xF0)
             {
-                tud_midi_n_stream_write(0, cable_num, buffer, 3);
+                // Find end of SysEx
+                size_t sysex_size = 1;
+                while(sysex_size < size && buffer[sysex_size] != 0xF7)
+                {
+                    sysex_size++;
+                }
+                // Include the end marker
+                if(sysex_size < size && buffer[sysex_size] == 0xF7)
+                {
+                    sysex_size++;
+                }
+
+                // TinyUSB has a helper function to send SysEx
+                tud_midi_n_stream_write(0, cable_num, buffer, sysex_size);
             }
-        }
-        else
-        {
-            // Single-byte messages (realtime)
-            tud_midi_n_stream_write(0, cable_num, buffer, 1);
+            // Other system messages
+            else if(buffer[0] == 0xF1 || buffer[0] == 0xF3)
+            {
+                // 2-byte messages (Time Code, Song Select)
+                if(size >= 2)
+                {
+                    tud_midi_n_stream_write(0, cable_num, buffer, 2);
+                }
+            }
+            else if(buffer[0] == 0xF2)
+            {
+                // 3-byte message (Song Position)
+                if(size >= 3)
+                {
+                    tud_midi_n_stream_write(0, cable_num, buffer, 3);
+                }
+            }
+            else
+            {
+                // Single-byte messages (realtime)
+                tud_midi_n_stream_write(0, cable_num, buffer, 1);
+            }
         }
     }
 }
