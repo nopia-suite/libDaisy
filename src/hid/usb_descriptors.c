@@ -150,7 +150,7 @@ enum
     (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) \
      + TUD_MIDI_MULTI_DESC_LEN(CFG_TUD_MIDI_NUMCABLES_IN,   \
                                CFG_TUD_MIDI_NUMCABLES_OUT)  \
-     + CFG_TUD_AUDIO * TUD_AUDIO_MIC_FOUR_CH_DESC_LEN)
+     + CFG_TUD_AUDIO * NOPIA_AUDIO_MIC_2CH_DESC_LEN)
 
 #define CONFIG_1_TOTAL_LEN \
     (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN)
@@ -197,7 +197,7 @@ uint8_t const desc_configuration_0[] = {
                               CFG_TUD_MIDI_NUMCABLES_IN,
                               CFG_TUD_MIDI_NUMCABLES_OUT),
 
-    NOPIA_AUDIO_MIC_FOUR_CH_DESCRIPTOR(
+    NOPIA_AUDIO_MIC_2CH_DESCRIPTOR(
         /*_itfnum*/ ITF_0_NUM_AUDIO_CONTROL,
         /*_stridx*/ 11,
         /*_nBytesPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX,

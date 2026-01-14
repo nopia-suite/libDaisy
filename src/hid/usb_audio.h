@@ -7,7 +7,7 @@ namespace daisy
 {
 
 // Lightweight abstraction for handling tusb audio
-// Currently only handles Tx for exactly 4 channels, no Rx
+// Currently only handles Tx for 2 or 4 channels, no Rx
 // and a single sample rate
 class USBAudioHandle
 {

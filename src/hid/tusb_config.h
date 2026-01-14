@@ -26,7 +26,7 @@
 #ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
 
-#include "tusb_mic_4ch_desc.h"
+#include "tusb_audio_desc.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -134,14 +134,14 @@ extern "C"
 // clang-format off
 #define CFG_TUD_AUDIO_FUNC_1_SAMPLE_RATE              48000
 
-#define CFG_TUD_AUDIO_FUNC_1_N_AS_INT                 NOPIA_AUDIO_MIC_FOUR_CH_DESC_N_AS_INT
-#define CFG_TUD_AUDIO_FUNC_1_DESC_LEN                 NOPIA_AUDIO_MIC_FOUR_CH_DESC_LEN
+#define CFG_TUD_AUDIO_FUNC_1_N_AS_INT                 NOPIA_AUDIO_MIC_2CH_DESC_N_AS_INT
+#define CFG_TUD_AUDIO_FUNC_1_DESC_LEN                 NOPIA_AUDIO_MIC_2CH_DESC_LEN
 
 #define CFG_TUD_AUDIO_FUNC_1_CTRL_BUF_SZ              64
 
 #define CFG_TUD_AUDIO_ENABLE_EP_IN                    1
 #define CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX    2  // This value is not required by the driver, it parses this information from the descriptor once the alternate interface is set by the host - we use it for the setup
-#define CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX            4  // This value is not required by the driver, it parses this information from the descriptor once the alternate interface is set by the host - we use it for the setup
+#define CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX            2  // This value is not required by the driver, it parses this information from the descriptor once the alternate interface is set by the host - we use it for the setup
 #define CFG_TUD_AUDIO_EP_SZ_IN                        TUD_AUDIO_EP_SIZE(CFG_TUD_AUDIO_FUNC_1_SAMPLE_RATE, CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX, CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX)
 
 #define CFG_TUD_AUDIO_EP_IN_FLOW_CONTROL              1

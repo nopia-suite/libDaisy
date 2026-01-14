@@ -12,7 +12,7 @@
 namespace daisy
 {
 
-// 4 channels, interleaved
+// num Tx channels, interleaved - pulled directly from tusb descriptors config
 static constexpr size_t kNumTxChannels = CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX;
 
 struct UAC2State
