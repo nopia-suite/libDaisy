@@ -48,6 +48,7 @@ hid/switch \
 hid/usb \
 hid/usb_midi \
 hid/logger \
+hid/usb_audio \
 hid/usb_descriptors \
 hid/usb_msc_sd \
 hid/usb_host \

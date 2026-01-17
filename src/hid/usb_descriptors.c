@@ -124,6 +124,8 @@ enum
     ITF_0_NUM_CDC_DATA,
     ITF_0_NUM_MIDI,
     ITF_0_NUM_MIDI_STREAMING,
+    ITF_0_NUM_AUDIO_CONTROL,
+    ITF_0_NUM_AUDIO_STREAMING_MIC,
     ITF_0_NUM_TOTAL
 };
 
@@ -147,7 +149,8 @@ enum
 #define CONFIG_0_TOTAL_LEN                                  \
     (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) \
      + TUD_MIDI_MULTI_DESC_LEN(CFG_TUD_MIDI_NUMCABLES_IN,   \
-                               CFG_TUD_MIDI_NUMCABLES_OUT))
+                               CFG_TUD_MIDI_NUMCABLES_OUT)  \
+     + CFG_TUD_AUDIO * NOPIA_AUDIO_MIC_2CH_DESC_LEN)
 
 #define CONFIG_1_TOTAL_LEN \
     (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN)
@@ -159,6 +162,8 @@ enum
 
 #define EPNUM_0_MIDI_OUT 0x03
 #define EPNUM_0_MIDI_IN 0x83
+
+#define EPNUM_0_AUDIO_MIC 0x85
 
 // Endpoint numbers for mode 1 (CDC + MSC)
 #define EPNUM_1_CDC_NOTIF 0x81
@@ -191,6 +196,14 @@ uint8_t const desc_configuration_0[] = {
                               64,
                               CFG_TUD_MIDI_NUMCABLES_IN,
                               CFG_TUD_MIDI_NUMCABLES_OUT),
+
+    NOPIA_AUDIO_MIC_2CH_DESCRIPTOR(
+        /*_itfnum*/ ITF_0_NUM_AUDIO_CONTROL,
+        /*_stridx*/ 11,
+        /*_nBytesPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX,
+        /*_nBitsUsedPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX * 8,
+        /*_epin*/ EPNUM_0_AUDIO_MIC,
+        /*_epsize*/ CFG_TUD_AUDIO_EP_SZ_IN),
 };
 
 // Configuration descriptor for mode 1 (CDC + MSC)
@@ -240,11 +253,12 @@ char const *string_desc_arr[] = {
     NULL,                       // 3: Serials will use unique ID if possible
     "Nopia CDC",                // 4: CDC Interface
     "Nopia MIDI Out Keys",      // 5: MIDI Interface ...
-    "Nopia MIDI Out Bass",
-    "Nopia MIDI Out Arp",
-    "Nopia MIDI Out Synth A",
-    "Nopia MIDI Out Synth B",
-    "Nopia MIDI In",
+    "Nopia MIDI Out Bass",      // 6
+    "Nopia MIDI Out Arp",       // 7
+    "Nopia MIDI Out Synth A",   // 8
+    "Nopia MIDI Out Synth B",   // 9
+    "Nopia MIDI In",            // 10
+    "Nopia Audio"               // 11: UAC2 Audio Interface
 };
 
 static uint16_t _desc_str[32 + 1];
