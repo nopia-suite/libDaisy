@@ -166,7 +166,8 @@ class Mcp23X17
         config.transport_config.Defaults(addr);
         Init(config);
 
-        int_.Init(Pin(PORTD, 11), GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
+        // Do not enable for Rev2.0.0 (pin is used elsewhere)
+        // int_.Init(Pin(PORTD, 11), GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
     };
 
     void Init(const Config& config)
